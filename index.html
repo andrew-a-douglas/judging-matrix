@@ -97,7 +97,7 @@
     .card.collapsed .collapsible-body{display:none}
     .collapse-note{color:var(--muted);font-size:12px;line-height:1.35;margin-top:6px}
 
-    /* Rankings */
+    /* Categories table */
     table{width:100%;border-collapse:separate;border-spacing:0 8px;}
     th{color:var(--muted);font-size:12px;text-align:left;padding:0 10px;}
     td{
@@ -108,6 +108,8 @@
     }
     tr td:first-child{border-radius:12px 0 0 12px}
     tr td:last-child{border-radius:0 12px 12px 0}
+
+    /* Rankings */
     .rank{font-family:var(--mono);opacity:.9;width:62px}
     .score{font-family:var(--mono);text-align:right;width:86px}
     .rank-link{
@@ -193,17 +195,27 @@
       flex-wrap:wrap;          /* wraps if too many categories */
       width:100%;
     }
+
+    /* ===== Heatmap-style slider chips ===== */
     .slider-chip{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
+      /* 0..1 heat value set by JS */
+      --heat: 0;
+      /* Hue from 0 (red) to 120 (green) */
+      --hue: calc(var(--heat) * 120);
+
+      border:1px solid hsla(var(--hue), 90%, 60%, 0.22);
       border-radius:12px;
       padding:8px 10px;
       display:flex;
       align-items:center;
       gap:10px;
-      flex: 1 1 220px;         /* grow a bit; keeps many visible */
+      flex: 1 1 220px;
       min-width: 220px;
       max-width: 420px;
+
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), transparent 140%),
+        hsla(var(--hue), 90%, 55%, 0.14);
     }
     @media (max-width: 520px){
       .slider-chip{min-width: 100%;}
@@ -217,7 +229,12 @@
       align-items:center;
       width:100%;
     }
-    .chip-val{font-family:var(--mono);min-width:3.5ch;text-align:right}
+    .chip-val{
+      font-family:var(--mono);
+      min-width:3.5ch;
+      text-align:right;
+      color: hsla(var(--hue), 90%, 80%, 0.95);
+    }
     input[type="range"]{width:100%}
 
     .comp-details{
@@ -238,6 +255,7 @@
       .details-grid{grid-template-columns:1fr}
     }
     .detail-item{display:flex;justify-content:space-between;gap:12px}
+
     .toast{
       position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
       background:rgba(0,0,0,.55);
@@ -256,7 +274,7 @@
       <div>
         <h1>Bagpipe Judging Widget</h1>
         <div class="sub">
-          Setup categories + weights (total 100%), start the competition, add competitors, then adjust sliders inline.
+          Setup categories + weights (total 100%), start the competition, add competitors, then adjust sliders inline (0–10 in 0.5 steps).
         </div>
       </div>
       <div class="pill">
@@ -334,8 +352,7 @@
         </div>
 
         <div class="hint">
-          Sliders are 0–10 in 0.5 steps. Totals are weighted out of 100.
-          <span class="kbd">Tip:</span> Click a name in Rankings to jump to their row.
+          <span class="kbd">Tip:</span> Click a name in Rankings to jump to their row. Slider chips tint red→yellow→green as scores rise.
         </div>
 
         <div class="divider"></div>
@@ -549,6 +566,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return total;
   }
 
+  // Heat helper: set 0..1 heat value based on 0..10 score
+  function setChipHeat(chipEl, value0to10){
+    const heat = Math.max(0, Math.min(1, (Number(value0to10) || 0) / 10));
+    chipEl.style.setProperty("--heat", heat.toFixed(3));
+  }
+
   function scrollToCompetitor(compId){
     const row = document.getElementById(`comp-${compId}`);
     if (!row) return;
@@ -637,7 +660,6 @@ document.addEventListener("DOMContentLoaded", () => {
       toggle.addEventListener("click", ()=>{
         comp.expanded = !comp.expanded;
         renderCompetitorRows();
-        // keep rankings consistent / snappy
         recalculateAndRenderRankings();
       });
 
@@ -705,22 +727,25 @@ document.addEventListener("DOMContentLoaded", () => {
         val.className = "chip-val";
         val.textContent = Number(slider.value).toFixed(1);
 
+        // Initial heat tint
+        setChipHeat(chip, slider.value);
+
         slider.addEventListener("input", ()=>{
           const n = Number(slider.value);
           comp.scores[cat.id] = n;
           val.textContent = n.toFixed(1);
 
-          // update total instantly without re-rendering whole list
+          // Update heat tint live
+          setChipHeat(chip, slider.value);
+
+          // Update total instantly without re-rendering whole list
           totalVal.textContent = calculateScore(comp).toFixed(1);
 
-          // details panel values need refresh; cheapest is to update rankings + (if expanded) rebuild details
+          // Update rankings and (if expanded) details
           recalculateAndRenderRankings();
           if (comp.expanded) {
-            // update details text in place
             const details = row.querySelector(".comp-details");
-            if (details) {
-              details.innerHTML = buildDetailsHTML(comp);
-            }
+            if (details) details.innerHTML = buildDetailsHTML(comp);
           }
         });
 
@@ -823,13 +848,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!Number.isFinite(w) || w <= 0) { startError.textContent="Please enter a weight greater than 0."; startError.style.display="block"; return; }
     if (w > 100) { startError.textContent="Weight can't be more than 100."; startError.style.display="block"; return; }
 
-    categories.push({ id: uid(), name, weight: Math.round(w) });
+    const newCat = { id: uid(), name, weight: Math.round(w) };
+    categories.push(newCat);
     catName.value = "";
     catWeight.value = "";
     catName.focus();
 
-    // ensure all existing competitors get the new category score key
-    competitors.forEach(c => { c.scores[categories[categories.length-1].id] = 0; });
+    // Add the new category key to existing competitors (default 0)
+    competitors.forEach(c => { c.scores[newCat.id] = 0; });
 
     renderCategories();
     renderCompetitorRows();
