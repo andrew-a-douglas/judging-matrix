@@ -32,7 +32,7 @@
         radial-gradient(1000px 700px at 90% 30%, rgba(140,255,201,.13), transparent 60%),
         var(--bg);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 64px;}
+    .wrap{max-width:1200px;margin:0 auto;padding:28px 18px 64px;}
     header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px;}
     h1{font-size:22px;margin:0;letter-spacing:.2px;}
     .sub{color:var(--muted);margin-top:6px;font-size:14px;line-height:1.35;}
@@ -42,8 +42,14 @@
       border-radius:999px;background:rgba(255,255,255,.03);
       color:var(--muted);font-size:13px;
     }
-    .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start;}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr;}}
+
+    .grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
+
+    /* When running, bias space toward scoring/rankings */
+    .grid.running{grid-template-columns:360px 1fr;}
+    @media (max-width: 980px){ .grid.running{grid-template-columns:1fr;} }
+
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.04), transparent 120%), var(--card);
       border:1px solid var(--line);
@@ -88,9 +94,11 @@
       border:1px solid rgba(255,106,106,.35);
     }
     .btn:disabled{opacity:.45;cursor:not-allowed}
+
     .hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.35}
     .error{color:var(--danger);font-size:12px;margin-top:8px}
     .ok{color:var(--accent2);font-size:12px;margin-top:8px}
+
     table{width:100%;border-collapse:separate;border-spacing:0 8px;}
     th{color:var(--muted);font-size:12px;text-align:left;padding:0 10px;}
     td{
@@ -101,30 +109,55 @@
     }
     tr td:first-child{border-radius:12px 0 0 12px}
     tr td:last-child{border-radius:0 12px 12px 0}
+
     .rank{font-family:var(--mono);opacity:.9;width:62px}
     .score{font-family:var(--mono);text-align:right;width:86px}
     .name{font-weight:650}
     .muted{color:var(--muted)}
     .divider{height:1px;background:var(--line);margin:14px 0}
+
     .competitor-card{
       background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 140%), var(--card2);
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:14px;
       margin-top:12px;
+      scroll-margin-top: 16px;
     }
+    .competitor-card.flash{
+      outline:2px solid rgba(106,166,255,.55);
+      box-shadow: 0 0 0 6px rgba(106,166,255,.12);
+      transition: box-shadow .2s ease;
+    }
+
     .comp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .comp-title{display:flex;flex-direction:column;gap:2px}
     .comp-title strong{font-size:15px}
     .comp-title span{color:var(--muted);font-size:12px}
-    .sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-    @media (max-width: 760px){ .sliders{grid-template-columns:1fr;}}
+
+    /* CHANGE #2: sliders in one horizontal row, spanning full width */
+    .sliders{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+      width:100%;
+    }
     .slider-row{
       border:1px solid var(--line);
       background:rgba(255,255,255,.03);
       border-radius:12px;
       padding:10px;
+
+      /* these make each category box behave nicely in a long row */
+      flex: 1 1 240px;         /* grow, shrink, base width */
+      min-width: 220px;        /* keep readable */
+      max-width: 520px;        /* avoid absurdly wide boxes */
     }
+    @media (max-width: 520px){
+      .slider-row{min-width: 100%;}
+    }
+
     .slider-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .slider-top .meta{display:flex;flex-direction:column;gap:2px}
     .slider-top .cat{font-weight:650;font-size:13px}
@@ -137,9 +170,11 @@
       opacity:.95;
     }
     input[type="range"]{width:100%;margin-top:8px}
+
     .footer-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-top:12px}
     .kbd{font-family:var(--mono);font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.04);color:var(--muted)}
     .small{font-size:12px;color:var(--muted)}
+
     .toast{
       position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
       background:rgba(0,0,0,.55);
@@ -149,8 +184,40 @@
       backdrop-filter: blur(8px);
       display:none;
     }
+
+    /* CHANGE #1: Collapsible setup panel */
+    .collapse-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .collapse-head h2{margin:0;font-size:16px}
+    .collapsible-body{display:block}
+    .card.collapsed .collapsible-body{display:none}
+    .card.collapsed{padding-bottom:14px}
+    .collapse-note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+      margin-top:6px;
+    }
+
+    /* CHANGE #3: Clickable names in rankings */
+    .rank-link{
+      display:inline-block;
+      color:var(--text);
+      text-decoration:none;
+      border-bottom:1px dashed rgba(255,255,255,.25);
+      cursor:pointer;
+    }
+    .rank-link:hover{
+      border-bottom-color: rgba(140,255,201,.65);
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
@@ -166,49 +233,58 @@
       </div>
     </header>
 
-    <div class="grid">
+    <div class="grid" id="grid">
       <!-- Setup -->
-      <section class="card">
-        <h2>1) Setup categories</h2>
-
-        <div class="row" style="margin-top:8px">
-          <div>
-            <label>Category name</label>
-            <input id="catName" type="text" placeholder="e.g., Sound" autocomplete="off" />
-          </div>
-          <div style="max-width:180px;flex:0 0 180px">
-            <label>Weight %</label>
-            <input id="catWeight" type="number" min="0" max="100" step="1" placeholder="e.g., 30" />
-          </div>
-          <div style="max-width:160px;flex:0 0 160px;align-self:end">
-            <button class="btn" id="addCategoryBtn" type="button">Add category</button>
-          </div>
+      <section class="card" id="setupCard">
+        <div class="collapse-head">
+          <h2>1) Setup categories</h2>
+          <button class="btn secondary" id="toggleSetupBtn" type="button" style="display:none">Show setup</button>
         </div>
 
-        <div class="hint">Tip: weights should add up to <span class="kbd">100</span>. You can use any number of categories.</div>
-        <div id="weightMessage" class="hint"></div>
+        <div class="collapsible-body" id="setupBody">
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label>Category name</label>
+              <input id="catName" type="text" placeholder="e.g., Sound" autocomplete="off" />
+            </div>
+            <div style="max-width:180px;flex:0 0 180px">
+              <label>Weight %</label>
+              <input id="catWeight" type="number" min="0" max="100" step="1" placeholder="e.g., 30" />
+            </div>
+            <div style="max-width:160px;flex:0 0 160px;align-self:end">
+              <button class="btn" id="addCategoryBtn" type="button">Add category</button>
+            </div>
+          </div>
 
-        <div class="divider"></div>
+          <div class="hint">Tip: weights should add up to <span class="kbd">100</span>. You can use any number of categories.</div>
+          <div id="weightMessage" class="hint"></div>
 
-        <h2 style="margin-top:0">Categories</h2>
-        <div id="categoriesEmpty" class="muted">No categories yet.</div>
-        <table id="categoriesTable" style="display:none">
-          <thead>
-            <tr>
-              <th style="width:60%">Category</th>
-              <th style="width:20%">Weight</th>
-              <th style="width:20%"></th>
-            </tr>
-          </thead>
-          <tbody id="categoriesTbody"></tbody>
-        </table>
+          <div class="divider"></div>
 
-        <div class="footer-actions">
-          <button class="btn secondary" id="resetBtn" type="button">Reset</button>
-          <button class="btn" id="startBtn" type="button" disabled>Start competition</button>
+          <h2 style="margin-top:0">Categories</h2>
+          <div id="categoriesEmpty" class="muted">No categories yet.</div>
+          <table id="categoriesTable" style="display:none">
+            <thead>
+              <tr>
+                <th style="width:60%">Category</th>
+                <th style="width:20%">Weight</th>
+                <th style="width:20%"></th>
+              </tr>
+            </thead>
+            <tbody id="categoriesTbody"></tbody>
+          </table>
+
+          <div class="footer-actions">
+            <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+            <button class="btn" id="startBtn" type="button" disabled>Start competition</button>
+          </div>
+
+          <div id="startError" class="error" style="display:none"></div>
         </div>
 
-        <div id="startError" class="error" style="display:none"></div>
+        <div class="collapse-note" id="setupCollapsedNote" style="display:none">
+          Setup is locked while the competition is running.
+        </div>
       </section>
 
       <!-- Competition / Rankings -->
@@ -227,6 +303,7 @@
 
         <div class="hint">
           Scores are 0–10 (0.5 steps). Weighted total is out of 100.
+          <span class="kbd">Tip:</span> Click a name in Rankings to jump to that competitor.
         </div>
 
         <div class="divider"></div>
@@ -275,6 +352,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Elements ---
   const el = (id) => document.getElementById(id);
 
+  const grid = el("grid");
+
+  const setupCard = el("setupCard");
+  const setupBody = el("setupBody");
+  const toggleSetupBtn = el("toggleSetupBtn");
+  const setupCollapsedNote = el("setupCollapsedNote");
+
   const catName = el("catName");
   const catWeight = el("catWeight");
   const addCategoryBtn = el("addCategoryBtn");
@@ -298,14 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const statusDot = el("statusDot");
   const statusText = el("statusText");
-
   const toast = el("toast");
-
-  // If any of these are null, your platform/editor likely renamed/removed IDs.
-  if (!catName || !catWeight || !addCategoryBtn) {
-    alert("Widget error: missing setup elements (catName/catWeight/addCategoryBtn). Check the HTML IDs.");
-    return;
-  }
 
   // --- Helpers ---
   const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
@@ -314,6 +391,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function weightsSum(){
     return categories.reduce((acc, c) => acc + (Number(c.weight) || 0), 0);
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display = "block";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => { toast.style.display = "none"; }, 1400);
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
   }
 
   function setWeightMessage(){
@@ -342,22 +432,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function setSetupCollapsed(collapsed){
+    if (collapsed){
+      setupCard.classList.add("collapsed");
+      setupBody.style.display = "none";
+      setupCollapsedNote.style.display = "block";
+      toggleSetupBtn.style.display = "inline-block";
+      toggleSetupBtn.textContent = "Show setup";
+    } else {
+      setupCard.classList.remove("collapsed");
+      setupBody.style.display = "block";
+      setupCollapsedNote.style.display = "none";
+      toggleSetupBtn.style.display = started ? "inline-block" : "none";
+      toggleSetupBtn.textContent = "Hide setup";
+    }
+  }
+
   function setStartedUI(isStarted){
     started = isStarted;
 
     if (started) {
       statusDot.style.background = "var(--accent2)";
       statusText.textContent = "Competition running";
+      grid.classList.add("running");
+      // CHANGE #1: collapse setup when starting
+      setSetupCollapsed(true);
     } else {
       statusDot.style.background = "var(--warn)";
       statusText.textContent = "Setup mode";
+      grid.classList.remove("running");
+      setSetupCollapsed(false);
     }
 
+    // Lock/unlock setup inputs
     catName.disabled = started;
     catWeight.disabled = started;
     addCategoryBtn.disabled = started;
     startBtn.disabled = started || (weightsSum() !== 100) || (categories.length === 0);
 
+    // Competition inputs
     compName.disabled = !started;
     addCompetitorBtn.disabled = !started;
 
@@ -409,6 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setWeightMessage();
   }
 
+  // Weighted score out of 100
   function calculateCompetitorScore(comp){
     let total = 0;
     for (const cat of categories) {
@@ -418,17 +532,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return total;
   }
 
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[s]));
-  }
+  // CHANGE #3: scroll-to + highlight on click
+  function scrollToCompetitor(compId){
+    const card = document.getElementById(`comp-${compId}`);
+    if (!card) return;
 
-  function showToast(msg){
-    toast.textContent = msg;
-    toast.style.display = "block";
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => { toast.style.display = "none"; }, 1400);
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // flash highlight
+    card.classList.add("flash");
+    clearTimeout(scrollToCompetitor._t);
+    scrollToCompetitor._t = setTimeout(() => card.classList.remove("flash"), 900);
   }
 
   function recalculateAndRenderRankings(){
@@ -459,7 +573,15 @@ document.addEventListener("DOMContentLoaded", () => {
       tdRank.textContent = `#${idx + 1}`;
 
       const tdName = document.createElement("td");
-      tdName.innerHTML = `<div class="name">${escapeHtml(s.name)}</div>`;
+      const a = document.createElement("a");
+      a.className = "rank-link";
+      a.href = `#comp-${s.id}`; // anchor for non-JS fallback
+      a.textContent = s.name;
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        scrollToCompetitor(s.id);
+      });
+      tdName.appendChild(a);
 
       const tdScore = document.createElement("td");
       tdScore.className = "score";
@@ -483,6 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const comp of competitors) {
       const card = document.createElement("div");
       card.className = "competitor-card";
+      card.id = `comp-${comp.id}`; // CHANGE #3: anchor target
 
       const head = document.createElement("div");
       head.className = "comp-head";
@@ -522,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
       head.appendChild(actions);
 
       const sliders = document.createElement("div");
-      sliders.className = "sliders";
+      sliders.className = "sliders"; // CHANGE #2: flex row
 
       for (const cat of categories) {
         const box = document.createElement("div");
@@ -669,9 +792,19 @@ document.addEventListener("DOMContentLoaded", () => {
       startError.style.display = "block";
       return;
     }
+
     setStartedUI(true);
     rankingsEmpty.textContent = "Add competitors to begin scoring.";
     compName.focus();
+
+    // show toggle button once running
+    toggleSetupBtn.style.display = "inline-block";
+    toggleSetupBtn.textContent = "Show setup";
+  });
+
+  toggleSetupBtn.addEventListener("click", () => {
+    const isCollapsed = setupCard.classList.contains("collapsed");
+    setSetupCollapsed(!isCollapsed ? true : false);
   });
 
   resetBtn.addEventListener("click", () => {
@@ -683,6 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
     recalculateAndRenderRankings();
     rankingsEmpty.textContent = "Start the competition, then add competitors.";
     startError.style.display = "none";
+    toggleSetupBtn.style.display = "none";
     catName.focus();
   });
 
