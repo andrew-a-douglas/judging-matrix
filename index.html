@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bagpipe Judging Widget</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --card2:#0f1730;
+      --text:#e8ecff;
+      --muted:#aeb7e6;
+      --line:rgba(255,255,255,.10);
+      --accent:#6aa6ff;
+      --accent2:#8cffc9;
+      --danger:#ff6a6a;
+      --warn:#ffd36a;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      --radius2: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 10%, rgba(106,166,255,.20), transparent 60%),
+        radial-gradient(1000px 700px at 90% 30%, rgba(140,255,201,.13), transparent 60%),
+        var(--bg);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 64px;}
+    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px;}
+    h1{font-size:22px;margin:0;letter-spacing:.2px;}
+    .sub{color:var(--muted);margin-top:6px;font-size:14px;line-height:1.35;}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border:1px solid var(--line);
+      border-radius:999px;background:rgba(255,255,255,.03);
+      color:var(--muted);font-size:13px;
+    }
+    .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr;}}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), transparent 120%), var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+    }
+    .card h2{margin:0 0 10px 0;font-size:16px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .row > *{flex:1}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+    input[type="text"], input[type="number"]{
+      width:100%;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:10px 11px;
+      border-radius:12px;
+      outline:none;
+    }
+    input[type="number"]{appearance:textfield}
+    input:disabled{opacity:.55}
+    .btn{
+      appearance:none;border:none;cursor:pointer;
+      padding:10px 12px;border-radius:12px;
+      background:rgba(106,166,255,.18);
+      color:var(--text);
+      border:1px solid rgba(106,166,255,.35);
+      font-weight:600;
+      transition:transform .06s ease, background .12s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{background:rgba(106,166,255,.25)}
+    .btn:active{transform:translateY(1px)}
+    .btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--text);
+    }
+    .btn.danger{
+      background:rgba(255,106,106,.14);
+      border:1px solid rgba(255,106,106,.35);
+    }
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.35}
+    .error{color:var(--danger);font-size:12px;margin-top:8px}
+    .ok{color:var(--accent2);font-size:12px;margin-top:8px}
+    table{width:100%;border-collapse:separate;border-spacing:0 8px;}
+    th{color:var(--muted);font-size:12px;text-align:left;padding:0 10px;}
+    td{
+      background:rgba(255,255,255,.035);
+      border:1px solid var(--line);
+      padding:10px;
+      vertical-align:top;
+    }
+    tr td:first-child{border-radius:12px 0 0 12px}
+    tr td:last-child{border-radius:0 12px 12px 0}
+    .rank{font-family:var(--mono);opacity:.9;width:62px}
+    .score{font-family:var(--mono);text-align:right;width:86px}
+    .name{font-weight:650}
+    .muted{color:var(--muted)}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .competitor-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 140%), var(--card2);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+      margin-top:12px;
+    }
+    .comp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .comp-title{display:flex;flex-direction:column;gap:2px}
+    .comp-title strong{font-size:15px}
+    .comp-title span{color:var(--muted);font-size:12px}
+    .sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    @media (max-width: 760px){ .sliders{grid-template-columns:1fr;}}
+    .slider-row{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:12px;
+      padding:10px;
+    }
+    .slider-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .slider-top .meta{display:flex;flex-direction:column;gap:2px}
+    .slider-top .cat{font-weight:650;font-size:13px}
+    .slider-top .w{color:var(--muted);font-size:12px}
+    .slider-val{
+      font-family:var(--mono);
+      min-width: 3.5ch;
+      text-align:right;
+      color:var(--text);
+      opacity:.95;
+    }
+    input[type="range"]{width:100%;margin-top:8px}
+    .footer-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-top:12px}
+    .kbd{font-family:var(--mono);font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.04);color:var(--muted)}
+    .small{font-size:12px;color:var(--muted)}
+    .toast{
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.14);
+      padding:10px 12px;border-radius:12px;
+      color:var(--text);font-size:13px;
+      backdrop-filter: blur(8px);
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Bagpipe Judging Widget</h1>
+        <div class="sub">
+          Define categories + weights (must total 100%), start the competition, add competitors, and score them on 0–10 sliders (0.5 steps).
+        </div>
+      </div>
+      <div class="pill" id="statusPill">
+        <span id="statusDot" style="display:inline-block;width:8px;height:8px;border-radius:999px;background:var(--warn)"></span>
+        <span id="statusText">Setup mode</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Setup -->
+      <section class="card">
+        <h2>1) Setup categories</h2>
+
+        <div class="row" style="margin-top:8px">
+          <div>
+            <label>Category name</label>
+            <input id="catName" type="text" placeholder="e.g., Sound" autocomplete="off" />
+          </div>
+          <div style="max-width:180px;flex:0 0 180px">
+            <label>Weight %</label>
+            <input id="catWeight" type="number" min="0" max="100" step="1" placeholder="e.g., 30" />
+          </div>
+          <div style="max-width:160px;flex:0 0 160px;align-self:end">
+            <button class="btn" id="addCategoryBtn" type="button">Add category</button>
+          </div>
+        </div>
+
+        <div class="hint">Tip: weights should add up to <span class="kbd">100</span>. You can use any number of categories.</div>
+        <div id="weightMessage" class="hint"></div>
+
+        <div class="divider"></div>
+
+        <h2 style="margin-top:0">Categories</h2>
+        <div id="categoriesEmpty" class="muted">No categories yet.</div>
+        <table id="categoriesTable" style="display:none">
+          <thead>
+            <tr>
+              <th style="width:60%">Category</th>
+              <th style="width:20%">Weight</th>
+              <th style="width:20%"></th>
+            </tr>
+          </thead>
+          <tbody id="categoriesTbody"></tbody>
+        </table>
+
+        <div class="footer-actions">
+          <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+          <button class="btn" id="startBtn" type="button" disabled>Start competition</button>
+        </div>
+
+        <div id="startError" class="error" style="display:none"></div>
+      </section>
+
+      <!-- Competition / Rankings -->
+      <section class="card">
+        <h2>2–4) Run the competition</h2>
+
+        <div class="row" style="margin-top:8px">
+          <div>
+            <label>Competitor name</label>
+            <input id="compName" type="text" placeholder="e.g., Jane MacLeod" autocomplete="off" disabled />
+          </div>
+          <div style="max-width:170px;flex:0 0 170px;align-self:end">
+            <button class="btn" id="addCompetitorBtn" type="button" disabled>Add competitor</button>
+          </div>
+        </div>
+
+        <div class="hint">
+          Scores are 0–10 (0.5 steps). Weighted total is out of 100.
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row" style="align-items:baseline;gap:10px">
+          <h2 style="margin:0;flex:1">Rankings</h2>
+          <div class="small" id="competitorCount">0 competitors</div>
+        </div>
+
+        <div id="rankingsEmpty" class="muted" style="margin-top:10px">
+          Start the competition, then add competitors.
+        </div>
+
+        <table id="rankingsTable" style="display:none;margin-top:6px">
+          <thead>
+            <tr>
+              <th class="rank">Rank</th>
+              <th>Name</th>
+              <th class="score">Score</th>
+            </tr>
+          </thead>
+          <tbody id="rankingsTbody"></tbody>
+        </table>
+
+        <div class="footer-actions">
+          <button class="btn secondary" id="copyBtn" type="button" disabled>Copy text readout</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2 style="margin-top:0">Scoring panels</h2>
+        <div id="competitorPanels"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  // --- State ---
+  let categories = [];  // {id, name, weight}
+  let competitors = []; // {id, name, scores: {catId: 0..10}}
+  let started = false;
+
+  // --- Elements ---
+  const el = (id) => document.getElementById(id);
+
+  const catName = el("catName");
+  const catWeight = el("catWeight");
+  const addCategoryBtn = el("addCategoryBtn");
+  const categoriesTable = el("categoriesTable");
+  const categoriesTbody = el("categoriesTbody");
+  const categoriesEmpty = el("categoriesEmpty");
+  const weightMessage = el("weightMessage");
+  const startBtn = el("startBtn");
+  const resetBtn = el("resetBtn");
+  const startError = el("startError");
+
+  const compName = el("compName");
+  const addCompetitorBtn = el("addCompetitorBtn");
+  const competitorPanels = el("competitorPanels");
+
+  const rankingsEmpty = el("rankingsEmpty");
+  const rankingsTable = el("rankingsTable");
+  const rankingsTbody = el("rankingsTbody");
+  const competitorCount = el("competitorCount");
+  const copyBtn = el("copyBtn");
+
+  const statusPill = el("statusPill");
+  const statusDot = el("statusDot");
+  const statusText = el("statusText");
+
+  const toast = el("toast");
+
+  // --- Helpers ---
+  const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
+
+  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+  function weightsSum(){
+    return categories.reduce((acc, c) => acc + (Number(c.weight) || 0), 0);
+  }
+
+  function setWeightMessage(){
+    const sum = weightsSum();
+    const remaining = 100 - sum;
+
+    if (categories.length === 0) {
+      weightMessage.className = "hint";
+      weightMessage.textContent = "Add at least one category.";
+      startBtn.disabled = true;
+      return;
+    }
+
+    if (sum === 100) {
+      weightMessage.className = "ok";
+      weightMessage.textContent = "Weights total 100%. Ready to start.";
+      startBtn.disabled = started; // if already started, keep disabled
+    } else if (sum < 100) {
+      weightMessage.className = "hint";
+      weightMessage.textContent = `Weights total ${sum}%. Add ${remaining}% more.`;
+      startBtn.disabled = true;
+    } else {
+      weightMessage.className = "error";
+      weightMessage.textContent = `Weights total ${sum}%. Remove ${Math.abs(remaining)}%.`;
+      startBtn.disabled = true;
+    }
+  }
+
+  function setStartedUI(isStarted){
+    started = isStarted;
+
+    if (started) {
+      statusDot.style.background = "var(--accent2)";
+      statusText.textContent = "Competition running";
+    } else {
+      statusDot.style.background = "var(--warn)";
+      statusText.textContent = "Setup mode";
+    }
+
+    // Lock/unlock setup inputs
+    catName.disabled = started;
+    catWeight.disabled = started;
+    addCategoryBtn.disabled = started;
+    startBtn.disabled = started || (weightsSum() !== 100) || (categories.length === 0);
+
+    // Competition inputs
+    compName.disabled = !started;
+    addCompetitorBtn.disabled = !started;
+
+    // Copy button enabled only when there are competitors
+    copyBtn.disabled = !(started && competitors.length > 0);
+  }
+
+  function renderCategories(){
+    categoriesTbody.innerHTML = "";
+
+    if (categories.length === 0) {
+      categoriesTable.style.display = "none";
+      categoriesEmpty.style.display = "block";
+    } else {
+      categoriesTable.style.display = "";
+      categoriesEmpty.style.display = "none";
+
+      categories.forEach(cat => {
+        const tr = document.createElement("tr");
+        const tdName = document.createElement("td");
+        const tdWeight = document.createElement("td");
+        const tdAction = document.createElement("td");
+
+        tdName.textContent = cat.name;
+        tdWeight.innerHTML = `<span class="kbd">${cat.weight}%</span>`;
+
+        const rm = document.createElement("button");
+        rm.type = "button";
+        rm.className = "btn danger";
+        rm.textContent = "Remove";
+        rm.disabled = started;
+        rm.addEventListener("click", () => {
+          // Remove category + delete scores that reference it
+          categories = categories.filter(c => c.id !== cat.id);
+          competitors.forEach(p => { delete p.scores[cat.id]; });
+          renderCategories();
+          setWeightMessage();
+          renderCompetitors(); // rebuild panels to match categories
+          recalculateAndRenderRankings();
+        });
+
+        tdAction.appendChild(rm);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdWeight);
+        tr.appendChild(tdAction);
+        categoriesTbody.appendChild(tr);
+      });
+    }
+
+    setWeightMessage();
+  }
+
+  // Weighted score out of 100
+  function calculateCompetitorScore(comp){
+    let total = 0;
+    for (const cat of categories) {
+      const raw = Number(comp.scores[cat.id] ?? 0); // 0..10
+      total += (raw / 10) * Number(cat.weight);
+    }
+    // Keep stable numeric rounding for display; actual comparisons use raw number
+    return total;
+  }
+
+  function recalculateAndRenderRankings(){
+    competitorCount.textContent = `${competitors.length} competitor${competitors.length === 1 ? "" : "s"}`;
+
+    if (!started || competitors.length === 0) {
+      rankingsTable.style.display = "none";
+      rankingsEmpty.style.display = "block";
+      rankingsTbody.innerHTML = "";
+      copyBtn.disabled = true;
+      return;
+    }
+
+    const scored = competitors.map(c => ({
+      id: c.id,
+      name: c.name,
+      score: calculateCompetitorScore(c)
+    }));
+
+    // Sort descending by score, then name (stable-ish)
+    scored.sort((a,b) => (b.score - a.score) || a.name.localeCompare(b.name));
+
+    rankingsTbody.innerHTML = "";
+    scored.forEach((s, idx) => {
+      const tr = document.createElement("tr");
+
+      const tdRank = document.createElement("td");
+      tdRank.className = "rank";
+      tdRank.textContent = `#${idx + 1}`;
+
+      const tdName = document.createElement("td");
+      tdName.innerHTML = `<div class="name">${escapeHtml(s.name)}</div>`;
+
+      const tdScore = document.createElement("td");
+      tdScore.className = "score";
+      tdScore.textContent = s.score.toFixed(1);
+
+      tr.appendChild(tdRank);
+      tr.appendChild(tdName);
+      tr.appendChild(tdScore);
+      rankingsTbody.appendChild(tr);
+    });
+
+    rankingsEmpty.style.display = "none";
+    rankingsTable.style.display = "";
+    copyBtn.disabled = false;
+  }
+
+  function renderCompetitors(){
+    competitorPanels.innerHTML = "";
+
+    if (!started || competitors.length === 0) return;
+
+    for (const comp of competitors) {
+      const card = document.createElement("div");
+      card.className = "competitor-card";
+
+      const head = document.createElement("div");
+      head.className = "comp-head";
+
+      const title = document.createElement("div");
+      title.className = "comp-title";
+
+      const strong = document.createElement("strong");
+      strong.textContent = comp.name;
+
+      const scoreSpan = document.createElement("span");
+      scoreSpan.className = "muted";
+      scoreSpan.textContent = `Total: ${calculateCompetitorScore(comp).toFixed(1)} / 100`;
+
+      title.appendChild(strong);
+      title.appendChild(scoreSpan);
+
+      const actions = document.createElement("div");
+      actions.className = "row";
+      actions.style.justifyContent = "flex-end";
+      actions.style.gap = "8px";
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn danger";
+      del.textContent = "Remove competitor";
+      del.addEventListener("click", () => {
+        competitors = competitors.filter(c => c.id !== comp.id);
+        renderCompetitors();
+        recalculateAndRenderRankings();
+        copyBtn.disabled = !(started && competitors.length > 0);
+      });
+
+      actions.appendChild(del);
+
+      head.appendChild(title);
+      head.appendChild(actions);
+
+      const sliders = document.createElement("div");
+      sliders.className = "sliders";
+
+      for (const cat of categories) {
+        const box = document.createElement("div");
+        box.className = "slider-row";
+
+        const top = document.createElement("div");
+        top.className = "slider-top";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const catDiv = document.createElement("div");
+        catDiv.className = "cat";
+        catDiv.textContent = cat.name;
+
+        const wDiv = document.createElement("div");
+        wDiv.className = "w";
+        wDiv.textContent = `${cat.weight}%`;
+
+        meta.appendChild(catDiv);
+        meta.appendChild(wDiv);
+
+        const val = document.createElement("div");
+        val.className = "slider-val";
+
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = "0";
+        slider.max = "10";
+        slider.step = "0.5";
+
+        const existing = Number(comp.scores[cat.id] ?? 0);
+        slider.value = String(clamp(existing, 0, 10));
+        val.textContent = Number(slider.value).toFixed(1);
+
+        slider.addEventListener("input", () => {
+          const n = Number(slider.value);
+          comp.scores[cat.id] = n;
+          val.textContent = n.toFixed(1);
+          scoreSpan.textContent = `Total: ${calculateCompetitorScore(comp).toFixed(1)} / 100`;
+          recalculateAndRenderRankings();
+        });
+
+        top.appendChild(meta);
+        top.appendChild(val);
+
+        box.appendChild(top);
+        box.appendChild(slider);
+
+        sliders.appendChild(box);
+      }
+
+      card.appendChild(head);
+      card.appendChild(sliders);
+      competitorPanels.appendChild(card);
+    }
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display = "block";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => { toast.style.display = "none"; }, 1400);
+  }
+
+  function buildTextReadout(){
+    const lines = [];
+    lines.push("Bagpipe Competition – Results");
+    lines.push(`Date: ${new Date().toLocaleDateString()}`);
+    lines.push("");
+    lines.push("Categories (weights):");
+    for (const cat of categories) lines.push(`- ${cat.name}: ${cat.weight}%`);
+    lines.push("");
+    lines.push("Rankings:");
+
+    const scored = competitors
+      .map(c => ({ c, score: calculateCompetitorScore(c) }))
+      .sort((a,b) => (b.score - a.score) || a.c.name.localeCompare(b.c.name));
+
+    scored.forEach((s, idx) => {
+      lines.push(`${idx + 1}. ${s.c.name} — ${s.score.toFixed(1)} / 100`);
+      for (const cat of categories) {
+        const raw = Number(s.c.scores[cat.id] ?? 0);
+        lines.push(`   • ${cat.name}: ${raw.toFixed(1)} / 10`);
+      }
+    });
+
+    return lines.join("\n");
+  }
+
+  async function copyToClipboard(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast("Copied!");
+    }catch{
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand("copy"); showToast("Copied!"); }
+      catch { showToast("Copy failed"); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  // --- Events ---
+  addCategoryBtn.addEventListener("click", () => {
+    startError.style.display = "none";
+
+    const name = (catName.value || "").trim();
+    const w = Number(catWeight.value);
+
+    if (!name) {
+      startError.textContent = "Please enter a category name.";
+      startError.style.display = "block";
+      return;
+    }
+    if (!Number.isFinite(w) || w <= 0) {
+      startError.textContent = "Please enter a weight greater than 0.";
+      startError.style.display = "block";
+      return;
+    }
+    if (w > 100) {
+      startError.textContent = "Weight can't be more than 100.";
+      startError.style.display = "block";
+      return;
+    }
+
+    categories.push({ id: uid(), name, weight: Math.round(w) });
+    catName.value = "";
+    catWeight.value = "";
+    catName.focus();
+
+    renderCategories();
+    // If competitors already exist (unlikely pre-start), refresh
+    renderCompetitors();
+    recalculateAndRenderRankings();
+  });
+
+  startBtn.addEventListener("click", () => {
+    startError.style.display = "none";
+    const sum = weightsSum();
+    if (categories.length === 0) {
+      startError.textContent = "Add at least one category before starting.";
+      startError.style.display = "block";
