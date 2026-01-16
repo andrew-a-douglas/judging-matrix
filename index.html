@@ -18,7 +18,6 @@
       --warn:#ffd36a;
       --shadow: 0 12px 30px rgba(0,0,0,.35);
       --radius: 16px;
-      --radius2: 12px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
@@ -32,7 +31,7 @@
         radial-gradient(1000px 700px at 90% 30%, rgba(140,255,201,.13), transparent 60%),
         var(--bg);
     }
-    .wrap{max-width:1200px;margin:0 auto;padding:28px 18px 64px;}
+    .wrap{max-width:1400px;margin:0 auto;padding:28px 18px 64px;}
     header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px;}
     h1{font-size:22px;margin:0;letter-spacing:.2px;}
     .sub{color:var(--muted);margin-top:6px;font-size:14px;line-height:1.35;}
@@ -43,12 +42,7 @@
       color:var(--muted);font-size:13px;
     }
 
-    .grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start;}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr;} }
-
-    /* When running, bias space toward scoring/rankings */
-    .grid.running{grid-template-columns:360px 1fr;}
-    @media (max-width: 980px){ .grid.running{grid-template-columns:1fr;} }
+    .stack{display:grid;grid-template-columns:1fr;gap:16px;align-items:start;}
 
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.04), transparent 120%), var(--card);
@@ -57,7 +51,7 @@
       padding:16px;
       box-shadow:var(--shadow);
     }
-    .card h2{margin:0 0 10px 0;font-size:16px;}
+
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
     .row > *{flex:1}
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
@@ -70,8 +64,8 @@
       border-radius:12px;
       outline:none;
     }
-    input[type="number"]{appearance:textfield}
     input:disabled{opacity:.55}
+
     .btn{
       appearance:none;border:none;cursor:pointer;
       padding:10px 12px;border-radius:12px;
@@ -84,21 +78,26 @@
     }
     .btn:hover{background:rgba(106,166,255,.25)}
     .btn:active{transform:translateY(1px)}
-    .btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--line);
-      color:var(--text);
-    }
-    .btn.danger{
-      background:rgba(255,106,106,.14);
-      border:1px solid rgba(255,106,106,.35);
-    }
+    .btn.secondary{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+    .btn.danger{background:rgba(255,106,106,.14);border:1px solid rgba(255,106,106,.35)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
 
     .hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.35}
     .error{color:var(--danger);font-size:12px;margin-top:8px}
     .ok{color:var(--accent2);font-size:12px;margin-top:8px}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .footer-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-top:12px}
+    .kbd{font-family:var(--mono);font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.04);color:var(--muted)}
+    .small{font-size:12px;color:var(--muted)}
+    .mono{font-family:var(--mono)}
 
+    /* Collapsible setup */
+    .collapse-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .collapse-head h2{margin:0;font-size:16px}
+    .card.collapsed .collapsible-body{display:none}
+    .collapse-note{color:var(--muted);font-size:12px;line-height:1.35;margin-top:6px}
+
+    /* Rankings */
     table{width:100%;border-collapse:separate;border-spacing:0 8px;}
     th{color:var(--muted);font-size:12px;text-align:left;padding:0 10px;}
     td{
@@ -109,72 +108,136 @@
     }
     tr td:first-child{border-radius:12px 0 0 12px}
     tr td:last-child{border-radius:0 12px 12px 0}
-
     .rank{font-family:var(--mono);opacity:.9;width:62px}
     .score{font-family:var(--mono);text-align:right;width:86px}
-    .name{font-weight:650}
-    .muted{color:var(--muted)}
-    .divider{height:1px;background:var(--line);margin:14px 0}
+    .rank-link{
+      display:inline-block;
+      color:var(--text);
+      text-decoration:none;
+      border-bottom:1px dashed rgba(255,255,255,.25);
+      cursor:pointer;
+    }
+    .rank-link:hover{border-bottom-color: rgba(140,255,201,.65);}
 
-    .competitor-card{
+    /* ===== Compact competitor rows ===== */
+    .comp-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .comp-row{
       background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 140%), var(--card2);
       border:1px solid var(--line);
       border-radius:var(--radius);
-      padding:14px;
-      margin-top:12px;
+      padding:12px;
       scroll-margin-top: 16px;
     }
-    .competitor-card.flash{
+    .comp-row.flash{
       outline:2px solid rgba(106,166,255,.55);
       box-shadow: 0 0 0 6px rgba(106,166,255,.12);
-      transition: box-shadow .2s ease;
     }
 
-    .comp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .comp-title{display:flex;flex-direction:column;gap:2px}
-    .comp-title strong{font-size:15px}
-    .comp-title span{color:var(--muted);font-size:12px}
-
-    /* CHANGE #2: sliders in one horizontal row, spanning full width */
-    .sliders{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:10px;
+    /* Grid that fits name + score + sliders inline */
+    .comp-main{
+      display:grid;
+      grid-template-columns: 260px 92px 1fr; /* name | total | sliders */
+      gap:12px;
+      align-items:center;
       width:100%;
     }
-    .slider-row{
+    @media (max-width: 980px){
+      .comp-main{grid-template-columns: 1fr; align-items:stretch}
+    }
+
+    .comp-meta{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .comp-name{
+      font-weight:700;
+      font-size:14px;
+      max-width: 100%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .comp-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .icon-btn{
+      padding:8px 10px;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:650;
+      font-size:12px;
+    }
+    .icon-btn:hover{background:rgba(255,255,255,.09)}
+    .icon-btn.danger{background:rgba(255,106,106,.14);border-color:rgba(255,106,106,.35)}
+
+    .comp-total{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      align-items:flex-end;
+    }
+    @media (max-width: 980px){
+      .comp-total{align-items:flex-start}
+    }
+    .comp-total .label{color:var(--muted);font-size:12px}
+    .comp-total .val{font-family:var(--mono);font-weight:750;font-size:16px}
+
+    /* Sliders bar: one row, lots visible */
+    .sliders-bar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;          /* wraps if too many categories */
+      width:100%;
+    }
+    .slider-chip{
       border:1px solid var(--line);
       background:rgba(255,255,255,.03);
       border-radius:12px;
-      padding:10px;
-
-      /* these make each category box behave nicely in a long row */
-      flex: 1 1 240px;         /* grow, shrink, base width */
-      min-width: 220px;        /* keep readable */
-      max-width: 520px;        /* avoid absurdly wide boxes */
+      padding:8px 10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex: 1 1 220px;         /* grow a bit; keeps many visible */
+      min-width: 220px;
+      max-width: 420px;
     }
     @media (max-width: 520px){
-      .slider-row{min-width: 100%;}
+      .slider-chip{min-width: 100%;}
     }
-
-    .slider-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .slider-top .meta{display:flex;flex-direction:column;gap:2px}
-    .slider-top .cat{font-weight:650;font-size:13px}
-    .slider-top .w{color:var(--muted);font-size:12px}
-    .slider-val{
-      font-family:var(--mono);
-      min-width: 3.5ch;
-      text-align:right;
-      color:var(--text);
-      opacity:.95;
+    .chip-left{min-width: 120px}
+    .chip-cat{font-weight:700;font-size:12px;line-height:1.1}
+    .chip-w{color:var(--muted);font-size:11px;line-height:1.1;margin-top:2px}
+    .chip-right{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      width:100%;
     }
-    input[type="range"]{width:100%;margin-top:8px}
+    .chip-val{font-family:var(--mono);min-width:3.5ch;text-align:right}
+    input[type="range"]{width:100%}
 
-    .footer-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-top:12px}
-    .kbd{font-family:var(--mono);font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.04);color:var(--muted)}
-    .small{font-size:12px;color:var(--muted)}
-
+    .comp-details{
+      display:none;
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .comp-row.expanded .comp-details{display:block}
+    .details-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px 14px;
+    }
+    @media (max-width: 780px){
+      .details-grid{grid-template-columns:1fr}
+    }
+    .detail-item{display:flex;justify-content:space-between;gap:12px}
     .toast{
       position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
       background:rgba(0,0,0,.55);
@@ -183,37 +246,6 @@
       color:var(--text);font-size:13px;
       backdrop-filter: blur(8px);
       display:none;
-    }
-
-    /* CHANGE #1: Collapsible setup panel */
-    .collapse-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .collapse-head h2{margin:0;font-size:16px}
-    .collapsible-body{display:block}
-    .card.collapsed .collapsible-body{display:none}
-    .card.collapsed{padding-bottom:14px}
-    .collapse-note{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
-      margin-top:6px;
-    }
-
-    /* CHANGE #3: Clickable names in rankings */
-    .rank-link{
-      display:inline-block;
-      color:var(--text);
-      text-decoration:none;
-      border-bottom:1px dashed rgba(255,255,255,.25);
-      cursor:pointer;
-    }
-    .rank-link:hover{
-      border-bottom-color: rgba(140,255,201,.65);
     }
   </style>
 </head>
@@ -224,17 +256,17 @@
       <div>
         <h1>Bagpipe Judging Widget</h1>
         <div class="sub">
-          Define categories + weights (must total 100%), start the competition, add competitors, and score them on 0–10 sliders (0.5 steps).
+          Setup categories + weights (total 100%), start the competition, add competitors, then adjust sliders inline.
         </div>
       </div>
-      <div class="pill" id="statusPill">
+      <div class="pill">
         <span id="statusDot" style="display:inline-block;width:8px;height:8px;border-radius:999px;background:var(--warn)"></span>
         <span id="statusText">Setup mode</span>
       </div>
     </header>
 
-    <div class="grid" id="grid">
-      <!-- Setup -->
+    <div class="stack">
+      <!-- Setup (full width, collapsible) -->
       <section class="card" id="setupCard">
         <div class="collapse-head">
           <h2>1) Setup categories</h2>
@@ -256,7 +288,7 @@
             </div>
           </div>
 
-          <div class="hint">Tip: weights should add up to <span class="kbd">100</span>. You can use any number of categories.</div>
+          <div class="hint">Weights must total <span class="kbd">100</span>. Add any categories you want.</div>
           <div id="weightMessage" class="hint"></div>
 
           <div class="divider"></div>
@@ -283,11 +315,11 @@
         </div>
 
         <div class="collapse-note" id="setupCollapsedNote" style="display:none">
-          Setup is locked while the competition is running.
+          Setup is collapsed to maximize judging space. Click “Show setup” if you need to review it.
         </div>
       </section>
 
-      <!-- Competition / Rankings -->
+      <!-- Competition (full width) -->
       <section class="card">
         <h2>2–4) Run the competition</h2>
 
@@ -302,8 +334,8 @@
         </div>
 
         <div class="hint">
-          Scores are 0–10 (0.5 steps). Weighted total is out of 100.
-          <span class="kbd">Tip:</span> Click a name in Rankings to jump to that competitor.
+          Sliders are 0–10 in 0.5 steps. Totals are weighted out of 100.
+          <span class="kbd">Tip:</span> Click a name in Rankings to jump to their row.
         </div>
 
         <div class="divider"></div>
@@ -334,8 +366,8 @@
 
         <div class="divider"></div>
 
-        <h2 style="margin-top:0">Scoring panels</h2>
-        <div id="competitorPanels"></div>
+        <h2 style="margin-top:0">Judging rows</h2>
+        <div id="competitorList" class="comp-list"></div>
       </section>
     </div>
   </div>
@@ -344,16 +376,13 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // --- State ---
-  let categories = [];  // {id, name, weight}
-  let competitors = []; // {id, name, scores: {catId: 0..10}}
+  let categories = [];   // {id, name, weight}
+  let competitors = [];  // {id, name, scores:{catId:number}, expanded:boolean}
   let started = false;
 
-  // --- Elements ---
   const el = (id) => document.getElementById(id);
 
-  const grid = el("grid");
-
+  // Setup elements
   const setupCard = el("setupCard");
   const setupBody = el("setupBody");
   const toggleSetupBtn = el("toggleSetupBtn");
@@ -370,9 +399,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetBtn = el("resetBtn");
   const startError = el("startError");
 
+  // Competition elements
   const compName = el("compName");
   const addCompetitorBtn = el("addCompetitorBtn");
-  const competitorPanels = el("competitorPanels");
 
   const rankingsEmpty = el("rankingsEmpty");
   const rankingsTable = el("rankingsTable");
@@ -380,30 +409,39 @@ document.addEventListener("DOMContentLoaded", () => {
   const competitorCount = el("competitorCount");
   const copyBtn = el("copyBtn");
 
+  const competitorList = el("competitorList");
+
   const statusDot = el("statusDot");
   const statusText = el("statusText");
   const toast = el("toast");
 
-  // --- Helpers ---
   const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
 
-  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-
   function weightsSum(){
-    return categories.reduce((acc, c) => acc + (Number(c.weight) || 0), 0);
+    return categories.reduce((acc,c)=>acc+(Number(c.weight)||0),0);
   }
 
   function showToast(msg){
     toast.textContent = msg;
     toast.style.display = "block";
     clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => { toast.style.display = "none"; }, 1400);
+    showToast._t = setTimeout(()=>toast.style.display="none", 1200);
   }
 
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[s]));
+  function setSetupCollapsed(collapsed){
+    if (collapsed){
+      setupCard.classList.add("collapsed");
+      setupBody.style.display = "none";
+      setupCollapsedNote.style.display = "block";
+      toggleSetupBtn.style.display = "inline-block";
+      toggleSetupBtn.textContent = "Show setup";
+    } else {
+      setupCard.classList.remove("collapsed");
+      setupBody.style.display = "block";
+      setupCollapsedNote.style.display = "none";
+      toggleSetupBtn.style.display = started ? "inline-block" : "none";
+      toggleSetupBtn.textContent = "Hide setup";
+    }
   }
 
   function setWeightMessage(){
@@ -432,45 +470,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function setSetupCollapsed(collapsed){
-    if (collapsed){
-      setupCard.classList.add("collapsed");
-      setupBody.style.display = "none";
-      setupCollapsedNote.style.display = "block";
-      toggleSetupBtn.style.display = "inline-block";
-      toggleSetupBtn.textContent = "Show setup";
-    } else {
-      setupCard.classList.remove("collapsed");
-      setupBody.style.display = "block";
-      setupCollapsedNote.style.display = "none";
-      toggleSetupBtn.style.display = started ? "inline-block" : "none";
-      toggleSetupBtn.textContent = "Hide setup";
-    }
-  }
-
   function setStartedUI(isStarted){
     started = isStarted;
 
     if (started) {
       statusDot.style.background = "var(--accent2)";
       statusText.textContent = "Competition running";
-      grid.classList.add("running");
-      // CHANGE #1: collapse setup when starting
       setSetupCollapsed(true);
+      toggleSetupBtn.style.display = "inline-block";
+      toggleSetupBtn.textContent = "Show setup";
     } else {
       statusDot.style.background = "var(--warn)";
       statusText.textContent = "Setup mode";
-      grid.classList.remove("running");
       setSetupCollapsed(false);
+      toggleSetupBtn.style.display = "none";
     }
 
-    // Lock/unlock setup inputs
     catName.disabled = started;
     catWeight.disabled = started;
     addCategoryBtn.disabled = started;
     startBtn.disabled = started || (weightsSum() !== 100) || (categories.length === 0);
 
-    // Competition inputs
     compName.disabled = !started;
     addCompetitorBtn.disabled = !started;
 
@@ -479,15 +499,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderCategories(){
     categoriesTbody.innerHTML = "";
-
-    if (categories.length === 0) {
+    if (categories.length === 0){
       categoriesTable.style.display = "none";
       categoriesEmpty.style.display = "block";
     } else {
       categoriesTable.style.display = "";
       categoriesEmpty.style.display = "none";
 
-      categories.forEach(cat => {
+      categories.forEach(cat=>{
         const tr = document.createElement("tr");
         const tdName = document.createElement("td");
         const tdWeight = document.createElement("td");
@@ -501,17 +520,15 @@ document.addEventListener("DOMContentLoaded", () => {
         rm.className = "btn danger";
         rm.textContent = "Remove";
         rm.disabled = started;
-        rm.addEventListener("click", () => {
-          categories = categories.filter(c => c.id !== cat.id);
-          competitors.forEach(p => { delete p.scores[cat.id]; });
+        rm.addEventListener("click", ()=>{
+          categories = categories.filter(c=>c.id!==cat.id);
+          competitors.forEach(p=>{ delete p.scores[cat.id]; });
           renderCategories();
-          setWeightMessage();
-          renderCompetitors();
+          renderCompetitorRows();
           recalculateAndRenderRankings();
         });
 
         tdAction.appendChild(rm);
-
         tr.appendChild(tdName);
         tr.appendChild(tdWeight);
         tr.appendChild(tdAction);
@@ -523,32 +540,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Weighted score out of 100
-  function calculateCompetitorScore(comp){
+  function calculateScore(comp){
     let total = 0;
-    for (const cat of categories) {
+    for (const cat of categories){
       const raw = Number(comp.scores[cat.id] ?? 0); // 0..10
-      total += (raw / 10) * Number(cat.weight);
+      total += (raw/10) * Number(cat.weight);
     }
     return total;
   }
 
-  // CHANGE #3: scroll-to + highlight on click
   function scrollToCompetitor(compId){
-    const card = document.getElementById(`comp-${compId}`);
-    if (!card) return;
-
-    card.scrollIntoView({ behavior: "smooth", block: "start" });
-
-    // flash highlight
-    card.classList.add("flash");
+    const row = document.getElementById(`comp-${compId}`);
+    if (!row) return;
+    row.scrollIntoView({behavior:"smooth", block:"start"});
+    row.classList.add("flash");
     clearTimeout(scrollToCompetitor._t);
-    scrollToCompetitor._t = setTimeout(() => card.classList.remove("flash"), 900);
+    scrollToCompetitor._t = setTimeout(()=>row.classList.remove("flash"), 900);
   }
 
   function recalculateAndRenderRankings(){
-    competitorCount.textContent = `${competitors.length} competitor${competitors.length === 1 ? "" : "s"}`;
+    competitorCount.textContent = `${competitors.length} competitor${competitors.length===1?"":"s"}`;
 
-    if (!started || competitors.length === 0) {
+    if (!started || competitors.length === 0){
       rankingsTable.style.display = "none";
       rankingsEmpty.style.display = "block";
       rankingsTbody.innerHTML = "";
@@ -556,28 +569,23 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const scored = competitors.map(c => ({
-      id: c.id,
-      name: c.name,
-      score: calculateCompetitorScore(c)
-    }));
-
-    scored.sort((a,b) => (b.score - a.score) || a.name.localeCompare(b.name));
+    const scored = competitors.map(c=>({id:c.id, name:c.name, score:calculateScore(c)}));
+    scored.sort((a,b)=>(b.score-a.score) || a.name.localeCompare(b.name));
 
     rankingsTbody.innerHTML = "";
-    scored.forEach((s, idx) => {
+    scored.forEach((s, idx)=>{
       const tr = document.createElement("tr");
 
       const tdRank = document.createElement("td");
       tdRank.className = "rank";
-      tdRank.textContent = `#${idx + 1}`;
+      tdRank.textContent = `#${idx+1}`;
 
       const tdName = document.createElement("td");
       const a = document.createElement("a");
       a.className = "rank-link";
-      a.href = `#comp-${s.id}`; // anchor for non-JS fallback
+      a.href = `#comp-${s.id}`;
       a.textContent = s.name;
-      a.addEventListener("click", (e) => {
+      a.addEventListener("click", (e)=>{
         e.preventDefault();
         scrollToCompetitor(s.id);
       });
@@ -598,78 +606,91 @@ document.addEventListener("DOMContentLoaded", () => {
     copyBtn.disabled = false;
   }
 
-  function renderCompetitors(){
-    competitorPanels.innerHTML = "";
+  function renderCompetitorRows(){
+    competitorList.innerHTML = "";
     if (!started || competitors.length === 0) return;
 
-    for (const comp of competitors) {
-      const card = document.createElement("div");
-      card.className = "competitor-card";
-      card.id = `comp-${comp.id}`; // CHANGE #3: anchor target
+    competitors.forEach((comp)=>{
+      const row = document.createElement("div");
+      row.className = "comp-row";
+      row.id = `comp-${comp.id}`;
+      if (comp.expanded) row.classList.add("expanded");
 
-      const head = document.createElement("div");
-      head.className = "comp-head";
+      const main = document.createElement("div");
+      main.className = "comp-main";
 
-      const title = document.createElement("div");
-      title.className = "comp-title";
+      // Name + actions
+      const meta = document.createElement("div");
+      meta.className = "comp-meta";
 
-      const strong = document.createElement("strong");
-      strong.textContent = comp.name;
-
-      const scoreSpan = document.createElement("span");
-      scoreSpan.className = "muted";
-      scoreSpan.textContent = `Total: ${calculateCompetitorScore(comp).toFixed(1)} / 100`;
-
-      title.appendChild(strong);
-      title.appendChild(scoreSpan);
+      const name = document.createElement("div");
+      name.className = "comp-name";
+      name.textContent = comp.name;
 
       const actions = document.createElement("div");
-      actions.className = "row";
-      actions.style.justifyContent = "flex-end";
-      actions.style.gap = "8px";
+      actions.className = "comp-actions";
+
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "icon-btn";
+      toggle.textContent = comp.expanded ? "Hide details" : "Details";
+      toggle.addEventListener("click", ()=>{
+        comp.expanded = !comp.expanded;
+        renderCompetitorRows();
+        // keep rankings consistent / snappy
+        recalculateAndRenderRankings();
+      });
 
       const del = document.createElement("button");
       del.type = "button";
-      del.className = "btn danger";
-      del.textContent = "Remove competitor";
-      del.addEventListener("click", () => {
-        competitors = competitors.filter(c => c.id !== comp.id);
-        renderCompetitors();
+      del.className = "icon-btn danger";
+      del.textContent = "Remove";
+      del.addEventListener("click", ()=>{
+        competitors = competitors.filter(c=>c.id!==comp.id);
+        renderCompetitorRows();
         recalculateAndRenderRankings();
         copyBtn.disabled = !(started && competitors.length > 0);
       });
 
+      actions.appendChild(toggle);
       actions.appendChild(del);
 
-      head.appendChild(title);
-      head.appendChild(actions);
+      meta.appendChild(name);
+      meta.appendChild(actions);
 
+      // Total score
+      const total = document.createElement("div");
+      total.className = "comp-total";
+      const totalLabel = document.createElement("div");
+      totalLabel.className = "label";
+      totalLabel.textContent = "Total";
+      const totalVal = document.createElement("div");
+      totalVal.className = "val";
+      totalVal.textContent = calculateScore(comp).toFixed(1);
+      total.appendChild(totalLabel);
+      total.appendChild(totalVal);
+
+      // Sliders inline
       const sliders = document.createElement("div");
-      sliders.className = "sliders"; // CHANGE #2: flex row
+      sliders.className = "sliders-bar";
 
-      for (const cat of categories) {
-        const box = document.createElement("div");
-        box.className = "slider-row";
+      for (const cat of categories){
+        const chip = document.createElement("div");
+        chip.className = "slider-chip";
 
-        const top = document.createElement("div");
-        top.className = "slider-top";
-
-        const meta = document.createElement("div");
-        meta.className = "meta";
-
-        const catDiv = document.createElement("div");
-        catDiv.className = "cat";
-        catDiv.textContent = cat.name;
-
+        const left = document.createElement("div");
+        left.className = "chip-left";
+        const catNameDiv = document.createElement("div");
+        catNameDiv.className = "chip-cat";
+        catNameDiv.textContent = cat.name;
         const wDiv = document.createElement("div");
-        wDiv.className = "w";
+        wDiv.className = "chip-w";
         wDiv.textContent = `${cat.weight}%`;
+        left.appendChild(catNameDiv);
+        left.appendChild(wDiv);
 
-        meta.appendChild(catDiv);
-        meta.appendChild(wDiv);
-
-        const val = document.createElement("div");
-        val.className = "slider-val";
+        const right = document.createElement("div");
+        right.className = "chip-right";
 
         const slider = document.createElement("input");
         slider.type = "range";
@@ -677,31 +698,76 @@ document.addEventListener("DOMContentLoaded", () => {
         slider.max = "10";
         slider.step = "0.5";
 
-        const existing = Number(comp.scores[cat.id] ?? 0);
-        slider.value = String(clamp(existing, 0, 10));
+        const current = Number(comp.scores[cat.id] ?? 0);
+        slider.value = String(Math.max(0, Math.min(10, current)));
+
+        const val = document.createElement("div");
+        val.className = "chip-val";
         val.textContent = Number(slider.value).toFixed(1);
 
-        slider.addEventListener("input", () => {
+        slider.addEventListener("input", ()=>{
           const n = Number(slider.value);
           comp.scores[cat.id] = n;
           val.textContent = n.toFixed(1);
-          scoreSpan.textContent = `Total: ${calculateCompetitorScore(comp).toFixed(1)} / 100`;
+
+          // update total instantly without re-rendering whole list
+          totalVal.textContent = calculateScore(comp).toFixed(1);
+
+          // details panel values need refresh; cheapest is to update rankings + (if expanded) rebuild details
           recalculateAndRenderRankings();
+          if (comp.expanded) {
+            // update details text in place
+            const details = row.querySelector(".comp-details");
+            if (details) {
+              details.innerHTML = buildDetailsHTML(comp);
+            }
+          }
         });
 
-        top.appendChild(meta);
-        top.appendChild(val);
+        right.appendChild(slider);
+        right.appendChild(val);
 
-        box.appendChild(top);
-        box.appendChild(slider);
-
-        sliders.appendChild(box);
+        chip.appendChild(left);
+        chip.appendChild(right);
+        sliders.appendChild(chip);
       }
 
-      card.appendChild(head);
-      card.appendChild(sliders);
-      competitorPanels.appendChild(card);
+      main.appendChild(meta);
+      main.appendChild(total);
+      main.appendChild(sliders);
+
+      row.appendChild(main);
+
+      // Optional details
+      const details = document.createElement("div");
+      details.className = "comp-details";
+      details.innerHTML = buildDetailsHTML(comp);
+      row.appendChild(details);
+
+      competitorList.appendChild(row);
+    });
+  }
+
+  function buildDetailsHTML(comp){
+    const parts = [];
+    parts.push(`<div class="details-grid">`);
+    for (const cat of categories){
+      const raw = Number(comp.scores[cat.id] ?? 0);
+      parts.push(`
+        <div class="detail-item">
+          <span>${escapeHtml(cat.name)} <span class="mono">(${cat.weight}%)</span></span>
+          <span class="mono">${raw.toFixed(1)} / 10</span>
+        </div>
+      `);
     }
+    parts.push(`</div>`);
+    return parts.join("");
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
   }
 
   function buildTextReadout(){
@@ -715,7 +781,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lines.push("Rankings:");
 
     const scored = competitors
-      .map(c => ({ c, score: calculateCompetitorScore(c) }))
+      .map(c => ({ c, score: calculateScore(c) }))
       .sort((a,b) => (b.score - a.score) || a.c.name.localeCompare(b.c.name));
 
     scored.forEach((s, idx) => {
@@ -746,60 +812,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Events ---
+  // ===== Events =====
   addCategoryBtn.addEventListener("click", () => {
     startError.style.display = "none";
 
     const name = (catName.value || "").trim();
     const w = Number(catWeight.value);
 
-    if (!name) {
-      startError.textContent = "Please enter a category name.";
-      startError.style.display = "block";
-      return;
-    }
-    if (!Number.isFinite(w) || w <= 0) {
-      startError.textContent = "Please enter a weight greater than 0.";
-      startError.style.display = "block";
-      return;
-    }
-    if (w > 100) {
-      startError.textContent = "Weight can't be more than 100.";
-      startError.style.display = "block";
-      return;
-    }
+    if (!name) { startError.textContent="Please enter a category name."; startError.style.display="block"; return; }
+    if (!Number.isFinite(w) || w <= 0) { startError.textContent="Please enter a weight greater than 0."; startError.style.display="block"; return; }
+    if (w > 100) { startError.textContent="Weight can't be more than 100."; startError.style.display="block"; return; }
 
     categories.push({ id: uid(), name, weight: Math.round(w) });
     catName.value = "";
     catWeight.value = "";
     catName.focus();
 
+    // ensure all existing competitors get the new category score key
+    competitors.forEach(c => { c.scores[categories[categories.length-1].id] = 0; });
+
     renderCategories();
-    renderCompetitors();
+    renderCompetitorRows();
     recalculateAndRenderRankings();
   });
 
   startBtn.addEventListener("click", () => {
     startError.style.display = "none";
     const sum = weightsSum();
-    if (categories.length === 0) {
-      startError.textContent = "Add at least one category before starting.";
-      startError.style.display = "block";
-      return;
-    }
-    if (sum !== 100) {
-      startError.textContent = `Weights must total 100%. Current total is ${sum}%.`;
-      startError.style.display = "block";
-      return;
-    }
+    if (categories.length === 0) { startError.textContent="Add at least one category before starting."; startError.style.display="block"; return; }
+    if (sum !== 100) { startError.textContent=`Weights must total 100%. Current total is ${sum}%.`; startError.style.display="block"; return; }
 
     setStartedUI(true);
     rankingsEmpty.textContent = "Add competitors to begin scoring.";
     compName.focus();
-
-    // show toggle button once running
-    toggleSetupBtn.style.display = "inline-block";
-    toggleSetupBtn.textContent = "Show setup";
   });
 
   toggleSetupBtn.addEventListener("click", () => {
@@ -812,36 +857,27 @@ document.addEventListener("DOMContentLoaded", () => {
     competitors = [];
     renderCategories();
     setStartedUI(false);
-    competitorPanels.innerHTML = "";
+    competitorList.innerHTML = "";
     recalculateAndRenderRankings();
     rankingsEmpty.textContent = "Start the competition, then add competitors.";
     startError.style.display = "none";
-    toggleSetupBtn.style.display = "none";
     catName.focus();
   });
 
   addCompetitorBtn.addEventListener("click", () => {
     const name = (compName.value || "").trim();
-    if (!name) {
-      showToast("Enter a name");
-      compName.focus();
-      return;
-    }
+    if (!name) { showToast("Enter a name"); compName.focus(); return; }
     const exists = competitors.some(c => c.name.toLowerCase() === name.toLowerCase());
-    if (exists) {
-      showToast("Name already exists");
-      compName.select();
-      return;
-    }
+    if (exists) { showToast("Name already exists"); compName.select(); return; }
 
-    const c = { id: uid(), name, scores: {} };
+    const c = { id: uid(), name, scores: {}, expanded: false };
     for (const cat of categories) c.scores[cat.id] = 0;
 
     competitors.push(c);
     compName.value = "";
     compName.focus();
 
-    renderCompetitors();
+    renderCompetitorRows();
     recalculateAndRenderRankings();
     copyBtn.disabled = !(started && competitors.length > 0);
   });
@@ -863,12 +899,11 @@ document.addEventListener("DOMContentLoaded", () => {
     copyToClipboard(buildTextReadout());
   });
 
-  // --- Init ---
+  // ===== Init =====
   renderCategories();
   setStartedUI(false);
   recalculateAndRenderRankings();
 });
 </script>
-
 </body>
 </html>
