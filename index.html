@@ -198,10 +198,8 @@
 
     /* ===== Heatmap-style slider chips ===== */
     .slider-chip{
-      /* 0..1 heat value set by JS */
-      --heat: 0;
-      /* Hue from 0 (red) to 120 (green) */
-      --hue: calc(var(--heat) * 120);
+      --heat: 0; /* set by JS */
+      --hue: calc(var(--heat) * 120); /* 0 red -> 120 green */
 
       border:1px solid hsla(var(--hue), 90%, 60%, 0.22);
       border-radius:12px;
@@ -275,6 +273,7 @@
         <h1>Bagpipe Judging Widget</h1>
         <div class="sub">
           Setup categories + weights (total 100%), start the competition, add competitors, then adjust sliders inline (0–10 in 0.5 steps).
+          Auto-saves to this browser.
         </div>
       </div>
       <div class="pill">
@@ -326,6 +325,7 @@
 
           <div class="footer-actions">
             <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+            <button class="btn secondary" id="clearSavedBtn" type="button">Clear saved</button>
             <button class="btn" id="startBtn" type="button" disabled>Start competition</button>
           </div>
 
@@ -414,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const weightMessage = el("weightMessage");
   const startBtn = el("startBtn");
   const resetBtn = el("resetBtn");
+  const clearSavedBtn = el("clearSavedBtn");
   const startError = el("startError");
 
   // Competition elements
@@ -434,6 +435,59 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
 
+  // ===== Persistence (localStorage) =====
+  const STORAGE_KEY = "bagpipe_judging_widget_v1";
+
+  function saveState(){
+    const payload = {
+      version: 1,
+      started,
+      categories,
+      competitors,
+      setupCollapsed: setupCard.classList.contains("collapsed"),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    try{
+      const data = JSON.parse(raw);
+      if (!data || data.version !== 1) return false;
+
+      started = !!data.started;
+      categories = Array.isArray(data.categories) ? data.categories : [];
+      competitors = Array.isArray(data.competitors) ? data.competitors : [];
+
+      competitors.forEach(c => {
+        c.scores = c.scores && typeof c.scores === "object" ? c.scores : {};
+        c.expanded = !!c.expanded;
+      });
+
+      // Ensure every competitor has every category key
+      competitors.forEach(c => {
+        categories.forEach(cat => {
+          if (typeof c.scores[cat.id] !== "number") c.scores[cat.id] = 0;
+        });
+      });
+
+      renderCategories();
+      setStartedUI(started);
+      if (typeof data.setupCollapsed === "boolean") setSetupCollapsed(data.setupCollapsed);
+      renderCompetitorRows();
+      recalculateAndRenderRankings();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function clearSavedState(){
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  // ===== Helpers =====
   function weightsSum(){
     return categories.reduce((acc,c)=>acc+(Number(c.weight)||0),0);
   }
@@ -459,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
       toggleSetupBtn.style.display = started ? "inline-block" : "none";
       toggleSetupBtn.textContent = "Hide setup";
     }
+    saveState();
   }
 
   function setWeightMessage(){
@@ -493,13 +548,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (started) {
       statusDot.style.background = "var(--accent2)";
       statusText.textContent = "Competition running";
-      setSetupCollapsed(true);
+      // collapse setup to maximize space
+      setupCard.classList.add("collapsed");
+      setupBody.style.display = "none";
+      setupCollapsedNote.style.display = "block";
       toggleSetupBtn.style.display = "inline-block";
       toggleSetupBtn.textContent = "Show setup";
     } else {
       statusDot.style.background = "var(--warn)";
       statusText.textContent = "Setup mode";
-      setSetupCollapsed(false);
+      setupCard.classList.remove("collapsed");
+      setupBody.style.display = "block";
+      setupCollapsedNote.style.display = "none";
       toggleSetupBtn.style.display = "none";
     }
 
@@ -512,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addCompetitorBtn.disabled = !started;
 
     copyBtn.disabled = !(started && competitors.length > 0);
+    saveState();
   }
 
   function renderCategories(){
@@ -543,6 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
           renderCategories();
           renderCompetitorRows();
           recalculateAndRenderRankings();
+          saveState();
         });
 
         tdAction.appendChild(rm);
@@ -661,6 +723,7 @@ document.addEventListener("DOMContentLoaded", () => {
         comp.expanded = !comp.expanded;
         renderCompetitorRows();
         recalculateAndRenderRankings();
+        saveState();
       });
 
       const del = document.createElement("button");
@@ -672,6 +735,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCompetitorRows();
         recalculateAndRenderRankings();
         copyBtn.disabled = !(started && competitors.length > 0);
+        saveState();
       });
 
       actions.appendChild(toggle);
@@ -747,6 +811,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const details = row.querySelector(".comp-details");
             if (details) details.innerHTML = buildDetailsHTML(comp);
           }
+          saveState();
         });
 
         right.appendChild(slider);
@@ -860,6 +925,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCategories();
     renderCompetitorRows();
     recalculateAndRenderRankings();
+    saveState();
   });
 
   startBtn.addEventListener("click", () => {
@@ -871,11 +937,12 @@ document.addEventListener("DOMContentLoaded", () => {
     setStartedUI(true);
     rankingsEmpty.textContent = "Add competitors to begin scoring.";
     compName.focus();
+    saveState();
   });
 
   toggleSetupBtn.addEventListener("click", () => {
     const isCollapsed = setupCard.classList.contains("collapsed");
-    setSetupCollapsed(!isCollapsed ? true : false);
+    setSetupCollapsed(!isCollapsed ? false : true);
   });
 
   resetBtn.addEventListener("click", () => {
@@ -888,6 +955,12 @@ document.addEventListener("DOMContentLoaded", () => {
     rankingsEmpty.textContent = "Start the competition, then add competitors.";
     startError.style.display = "none";
     catName.focus();
+    saveState();
+  });
+
+  clearSavedBtn.addEventListener("click", () => {
+    clearSavedState();
+    showToast("Saved contest cleared");
   });
 
   addCompetitorBtn.addEventListener("click", () => {
@@ -906,6 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCompetitorRows();
     recalculateAndRenderRankings();
     copyBtn.disabled = !(started && competitors.length > 0);
+    saveState();
   });
 
   compName.addEventListener("keydown", (e) => {
@@ -926,9 +1000,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Init =====
-  renderCategories();
-  setStartedUI(false);
-  recalculateAndRenderRankings();
+  const restored = loadState();
+  if (!restored) {
+    renderCategories();
+    setStartedUI(false);
+    recalculateAndRenderRankings();
+    saveState();
+  }
 });
 </script>
 </body>
