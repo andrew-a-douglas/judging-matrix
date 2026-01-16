@@ -266,7 +266,7 @@
   <div class="toast" id="toast"></div>
 
 <script>
-(() => {
+document.addEventListener("DOMContentLoaded", () => {
   // --- State ---
   let categories = [];  // {id, name, weight}
   let competitors = []; // {id, name, scores: {catId: 0..10}}
@@ -296,11 +296,16 @@
   const competitorCount = el("competitorCount");
   const copyBtn = el("copyBtn");
 
-  const statusPill = el("statusPill");
   const statusDot = el("statusDot");
   const statusText = el("statusText");
 
   const toast = el("toast");
+
+  // If any of these are null, your platform/editor likely renamed/removed IDs.
+  if (!catName || !catWeight || !addCategoryBtn) {
+    alert("Widget error: missing setup elements (catName/catWeight/addCategoryBtn). Check the HTML IDs.");
+    return;
+  }
 
   // --- Helpers ---
   const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
@@ -325,7 +330,7 @@
     if (sum === 100) {
       weightMessage.className = "ok";
       weightMessage.textContent = "Weights total 100%. Ready to start.";
-      startBtn.disabled = started; // if already started, keep disabled
+      startBtn.disabled = started;
     } else if (sum < 100) {
       weightMessage.className = "hint";
       weightMessage.textContent = `Weights total ${sum}%. Add ${remaining}% more.`;
@@ -348,17 +353,14 @@
       statusText.textContent = "Setup mode";
     }
 
-    // Lock/unlock setup inputs
     catName.disabled = started;
     catWeight.disabled = started;
     addCategoryBtn.disabled = started;
     startBtn.disabled = started || (weightsSum() !== 100) || (categories.length === 0);
 
-    // Competition inputs
     compName.disabled = !started;
     addCompetitorBtn.disabled = !started;
 
-    // Copy button enabled only when there are competitors
     copyBtn.disabled = !(started && competitors.length > 0);
   }
 
@@ -387,12 +389,11 @@
         rm.textContent = "Remove";
         rm.disabled = started;
         rm.addEventListener("click", () => {
-          // Remove category + delete scores that reference it
           categories = categories.filter(c => c.id !== cat.id);
           competitors.forEach(p => { delete p.scores[cat.id]; });
           renderCategories();
           setWeightMessage();
-          renderCompetitors(); // rebuild panels to match categories
+          renderCompetitors();
           recalculateAndRenderRankings();
         });
 
@@ -408,15 +409,26 @@
     setWeightMessage();
   }
 
-  // Weighted score out of 100
   function calculateCompetitorScore(comp){
     let total = 0;
     for (const cat of categories) {
       const raw = Number(comp.scores[cat.id] ?? 0); // 0..10
       total += (raw / 10) * Number(cat.weight);
     }
-    // Keep stable numeric rounding for display; actual comparisons use raw number
     return total;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display = "block";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => { toast.style.display = "none"; }, 1400);
   }
 
   function recalculateAndRenderRankings(){
@@ -436,7 +448,6 @@
       score: calculateCompetitorScore(c)
     }));
 
-    // Sort descending by score, then name (stable-ish)
     scored.sort((a,b) => (b.score - a.score) || a.name.localeCompare(b.name));
 
     rankingsTbody.innerHTML = "";
@@ -467,7 +478,6 @@
 
   function renderCompetitors(){
     competitorPanels.innerHTML = "";
-
     if (!started || competitors.length === 0) return;
 
     for (const comp of competitors) {
@@ -571,19 +581,6 @@
     }
   }
 
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[s]));
-  }
-
-  function showToast(msg){
-    toast.textContent = msg;
-    toast.style.display = "block";
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => { toast.style.display = "none"; }, 1400);
-  }
-
   function buildTextReadout(){
     const lines = [];
     lines.push("Bagpipe Competition – Results");
@@ -614,7 +611,6 @@
       await navigator.clipboard.writeText(text);
       showToast("Copied!");
     }catch{
-      // fallback
       const ta = document.createElement("textarea");
       ta.value = text;
       ta.style.position = "fixed";
@@ -656,7 +652,6 @@
     catName.focus();
 
     renderCategories();
-    // If competitors already exist (unlikely pre-start), refresh
     renderCompetitors();
     recalculateAndRenderRankings();
   });
@@ -667,3 +662,79 @@
     if (categories.length === 0) {
       startError.textContent = "Add at least one category before starting.";
       startError.style.display = "block";
+      return;
+    }
+    if (sum !== 100) {
+      startError.textContent = `Weights must total 100%. Current total is ${sum}%.`;
+      startError.style.display = "block";
+      return;
+    }
+    setStartedUI(true);
+    rankingsEmpty.textContent = "Add competitors to begin scoring.";
+    compName.focus();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    categories = [];
+    competitors = [];
+    renderCategories();
+    setStartedUI(false);
+    competitorPanels.innerHTML = "";
+    recalculateAndRenderRankings();
+    rankingsEmpty.textContent = "Start the competition, then add competitors.";
+    startError.style.display = "none";
+    catName.focus();
+  });
+
+  addCompetitorBtn.addEventListener("click", () => {
+    const name = (compName.value || "").trim();
+    if (!name) {
+      showToast("Enter a name");
+      compName.focus();
+      return;
+    }
+    const exists = competitors.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      showToast("Name already exists");
+      compName.select();
+      return;
+    }
+
+    const c = { id: uid(), name, scores: {} };
+    for (const cat of categories) c.scores[cat.id] = 0;
+
+    competitors.push(c);
+    compName.value = "";
+    compName.focus();
+
+    renderCompetitors();
+    recalculateAndRenderRankings();
+    copyBtn.disabled = !(started && competitors.length > 0);
+  });
+
+  compName.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !addCompetitorBtn.disabled) addCompetitorBtn.click();
+  });
+  catName.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !addCategoryBtn.disabled) {
+      if ((catWeight.value || "").trim() === "") catWeight.focus();
+      else addCategoryBtn.click();
+    }
+  });
+  catWeight.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !addCategoryBtn.disabled) addCategoryBtn.click();
+  });
+
+  copyBtn.addEventListener("click", () => {
+    copyToClipboard(buildTextReadout());
+  });
+
+  // --- Init ---
+  renderCategories();
+  setStartedUI(false);
+  recalculateAndRenderRankings();
+});
+</script>
+
+</body>
+</html>
